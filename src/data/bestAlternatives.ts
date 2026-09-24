@@ -363,7 +363,7 @@ export function getBestAlternativesForProduct(product: LabelAnalysisResult): Alt
 
 /**
  * Converts an alternative product into a standard LabelAnalysisResult
- * so that the user can compare side-by-side or inspect its full label in LabelLens.
+ * so that the user can compare side-by-side or inspect its full label in Food Decode.
  */
 export function convertAlternativeToLabelProduct(alt: AlternativeProduct): LabelAnalysisResult {
   return {

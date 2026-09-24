@@ -1,15 +1,15 @@
 import { LabelAnalysisResult } from '../types';
 import { DEMO_PRODUCTS } from '../data/demoProducts';
 
-const HISTORY_STORAGE_KEY = 'labellens_scan_history_v1';
-const FAVORITES_STORAGE_KEY = 'labellens_favorites_v1';
-const INIT_FLAG_KEY = 'labellens_initialized_v2';
+const HISTORY_STORAGE_KEY = 'fooddecode_scan_history_v1';
+const FAVORITES_STORAGE_KEY = 'fooddecode_favorites_v1';
+const INIT_FLAG_KEY = 'fooddecode_initialized_v2';
 
 export const storageService = {
   getHistory(): LabelAnalysisResult[] {
     try {
-      const data = localStorage.getItem(HISTORY_STORAGE_KEY);
-      const isInitialized = localStorage.getItem(INIT_FLAG_KEY);
+      const data = localStorage.getItem(HISTORY_STORAGE_KEY) || localStorage.getItem('labellens_scan_history_v1');
+      const isInitialized = localStorage.getItem(INIT_FLAG_KEY) || localStorage.getItem('labellens_initialized_v2');
       
       if (!isInitialized && !data) {
         // Pre-seed only on very first app launch

@@ -57,7 +57,7 @@ export const Hero: React.FC<HeroProps> = ({
       title: 'Personalized Insights',
       description: 'Interactive physiological impact wheel and instant AI conversational answers.',
       icon: Brain,
-      badge: 'Ask LabelLens',
+      badge: 'Ask Food Decode',
       color: 'text-rose-600 bg-rose-50 border-rose-200'
     }
   ];
@@ -70,7 +70,7 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Main Hero Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-300/80 text-emerald-800 text-xs font-semibold tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-300/80 text-emerald-800 text-xs font-semibold tracking-wide shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
             Designed for Conscious Consumers, Not Food Chemists
           </div>
@@ -83,8 +83,19 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           <p className="text-base sm:text-lg text-stone-600 leading-relaxed max-w-2xl mx-auto">
-            Look up any food product with real-time Google Search data or scan your physical package label to get an instant breakdown of nutrition, ingredients, allergens, and harmful additives.
+            Scan your physical package label to get an instant breakdown of nutrition, ingredients, allergens, and harmful additives.
           </p>
+
+          {/* User Guidance Banner: Prefer Scan Over Search Term */}
+          <div className="inline-flex flex-col sm:flex-row items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/15 to-emerald-500/10 border border-emerald-500/30 text-emerald-950 text-xs font-medium shadow-xs">
+            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800 uppercase tracking-wider text-[11px] bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+              <Scan className="w-3.5 h-3.5 text-emerald-700" />
+              Pro Tip
+            </span>
+            <span>
+              <strong>Prefer scan over search term:</strong> Direct camera OCR reads exact regional formulas, batch dates, and allergy warnings that text search might miss.
+            </span>
+          </div>
         </div>
 
         {/* Primary: Physical Label Scan & Upload Options */}
@@ -97,7 +108,7 @@ export const Hero: React.FC<HeroProps> = ({
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-base shadow-lg shadow-emerald-700/25 hover:bg-emerald-500 hover:shadow-emerald-600/35 active:scale-98 transition-all"
             >
               <Scan className="w-5 h-5" />
-              <span>Scan Food Label Camera</span>
+              <span>Scan Food Label Camera (Preferred)</span>
             </button>
 
             <button
@@ -128,11 +139,11 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
         </div>
 
-        {/* GOOGLE SEARCH: Placed below the scan section as requested */}
+        {/* GOOGLE SEARCH: Placed below the scan section */}
         <div className="mt-12 max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-4 justify-center">
             <div className="h-px bg-stone-200 flex-1 max-w-xs" />
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Or Search Any Food Brand With Google Search</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Prefer Scan Above • Or Search By Product Name</span>
             <div className="h-px bg-stone-200 flex-1 max-w-xs" />
           </div>
 

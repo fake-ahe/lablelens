@@ -69,7 +69,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
       if (navigator.share) {
         await navigator.share({
           title: `${product.productName} - Nutrition Summary`,
-          text: `Check out the nutrition breakdown for ${product.productName} by ${product.brand} on LabelLens.`,
+          text: `Check out the nutrition breakdown for ${product.productName} by ${product.brand} on Food Decode. Prefer scan over search term for full packaging analysis.`,
           url: window.location.href,
         });
       } else {

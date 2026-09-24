@@ -9,9 +9,11 @@ interface SEOUpdateOptions {
   product?: LabelAnalysisResult;
 }
 
-const DEFAULT_TITLE = "LabelLens – Food Nutrition, Ingredient & Label Scanner";
-const DEFAULT_DESC = "Understand what's really in your food. Scan food labels or search packaged foods to get instant nutrition breakdowns, ingredient safety analyses, allergen alerts, and harmful additive checks.";
+const DEFAULT_TITLE = "Food Decode – Food Nutrition, Ingredient & Label Scanner";
+const DEFAULT_DESC = "Understand what's really in your food. Prefer scan over search term for 100% accurate food labels, instant nutrition breakdowns, ingredient safety analyses, allergen alerts, and harmful additive checks.";
 const DEFAULT_KEYWORDS = [
+  "food decode",
+  "prefer scan over search term",
   "food label scanner",
   "packaged food search",
   "nutrition facts checker",
@@ -27,9 +29,9 @@ const DEFAULT_KEYWORDS = [
  */
 export function updatePageSEO(options: SEOUpdateOptions): void {
   try {
-    const title = options.title ? `${options.title} | LabelLens` : DEFAULT_TITLE;
+    const title = options.title ? `${options.title} | Food Decode` : DEFAULT_TITLE;
     const description = options.description || DEFAULT_DESC;
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://labellens.app';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://fooddecode.app';
     const path = typeof window !== 'undefined' ? window.location.pathname : '/';
     const canonical = options.canonicalUrl || `${origin}${path}${options.searchQuery ? `?q=${encodeURIComponent(options.searchQuery)}` : ''}`;
 
@@ -58,7 +60,7 @@ export function updatePageSEO(options: SEOUpdateOptions): void {
     setMeta('property', 'og:description', description);
     setMeta('property', 'og:url', canonical);
     setMeta('property', 'og:type', options.product ? 'product' : 'website');
-    setMeta('property', 'og:site_name', 'LabelLens');
+    setMeta('property', 'og:site_name', 'Food Decode');
 
     // Twitter
     setMeta('name', 'twitter:title', title);
@@ -85,11 +87,11 @@ export function updatePageSEO(options: SEOUpdateOptions): void {
  * Injects or updates Schema.org JSON-LD script in <head>
  */
 function updateStructuredData(options: SEOUpdateOptions, canonicalUrl: string): void {
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://labellens.app';
-  let script = document.getElementById('labellens-schema-jsonld') as HTMLScriptElement | null;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://fooddecode.app';
+  let script = document.getElementById('food-decode-schema-jsonld') as HTMLScriptElement | null;
   if (!script) {
     script = document.createElement('script');
-    script.id = 'labellens-schema-jsonld';
+    script.id = 'food-decode-schema-jsonld';
     script.type = 'application/ld+json';
     document.head.appendChild(script);
   }
@@ -99,7 +101,7 @@ function updateStructuredData(options: SEOUpdateOptions, canonicalUrl: string): 
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "LabelLens",
+      "name": "Food Decode",
       "url": origin,
       "description": DEFAULT_DESC,
       "potentialAction": {
@@ -115,7 +117,7 @@ function updateStructuredData(options: SEOUpdateOptions, canonicalUrl: string): 
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "LabelLens",
+      "name": "Food Decode",
       "applicationCategory": "HealthApplication",
       "operatingSystem": "All",
       "url": canonicalUrl,
@@ -152,7 +154,7 @@ function updateStructuredData(options: SEOUpdateOptions, canonicalUrl: string): 
         "name": p.brand || "Packaged Food"
       },
       "category": "Food",
-      "description": p.simpleSummary || `${p.productName} by ${p.brand} nutrition breakdown and ingredient analysis on LabelLens.`,
+      "description": p.simpleSummary || `${p.productName} by ${p.brand} nutrition breakdown and ingredient analysis on Food Decode.`,
       "nutrition": nutritionSchema
     });
   }

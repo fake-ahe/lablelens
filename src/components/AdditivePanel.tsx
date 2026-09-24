@@ -579,7 +579,7 @@ export const AdditivePanel: React.FC<AdditivePanelProps> = ({
       <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 text-xs text-stone-600 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          LabelLens additive toxicity screenings reference the World Health Organization International Agency for Research on Cancer (IARC), the European Food Safety Authority (EFSA), California Proposition 65, and the Center for Science in the Public Interest (CSPI) Chemical Cuisine evaluations.
+          Food Decode additive toxicity screenings reference the World Health Organization International Agency for Research on Cancer (IARC), the European Food Safety Authority (EFSA), California Proposition 65, and the Center for Science in the Public Interest (CSPI) Chemical Cuisine evaluations.
         </p>
       </div>
 

@@ -8,14 +8,21 @@ import { HistoryDashboard } from './components/HistoryDashboard';
 import { ProductComparison } from './components/ProductComparison';
 import { labelAnalysisService } from './services/labelAnalysisService';
 import { storageService } from './services/storageService';
+import { supabaseService } from './services/supabaseService';
+import { useAuth } from './context/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { AuthPage } from './components/AuthPage';
+import { ProfileModal } from './components/ProfileModal';
 import { LabelAnalysisResult } from './types';
 import { DEMO_PRODUCTS } from './data/demoProducts';
 import { SEARCHABLE_PRODUCTS } from './data/searchableProducts';
 import { updatePageSEO } from './utils/seo';
 import { AlertTriangle, X, ShieldAlert, Sparkles, Scan } from 'lucide-react';
+import { FooterModals, FooterModalType } from './components/FooterModals';
 
 export default function App() {
-  const [activeView, setActiveView] = useState<'home' | 'scan' | 'results' | 'history'>('home');
+  const { user, openAuthModal, openProfileModal, isConfigured, isPasswordRecoveryMode } = useAuth();
+  const [activeView, setActiveView] = useState<'home' | 'scan' | 'results' | 'history' | 'favorites' | 'login' | 'signup' | 'forgot-password' | 'reset-password'>('home');
   const [currentProduct, setCurrentProduct] = useState<LabelAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [scannedPreviewImage, setScannedPreviewImage] = useState<string | null>(null);
@@ -24,13 +31,41 @@ export default function App() {
   const [historyScans, setHistoryScans] = useState<LabelAnalysisResult[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [comparisonAlternative, setComparisonAlternative] = useState<LabelAnalysisResult | null>(null);
+  const [activeFooterModal, setActiveFooterModal] = useState<FooterModalType>(null);
 
-  // Initialize scans and check for URL search param for direct SEO indexing
+  // Automatically switch to reset password view when in recovery mode
   useEffect(() => {
-    const saved = storageService.getScans();
-    setHistoryScans(saved);
+    if (isPasswordRecoveryMode) {
+      setActiveView('reset-password');
+    }
+  }, [isPasswordRecoveryMode]);
 
-    // Deep link / direct search query parameter parsing (e.g. ?q=oreo)
+  // Sync scans with Supabase when user logs in, or fallback to local storage
+  useEffect(() => {
+    if (user) {
+      supabaseService.getUserScans(user.id).then(({ scans, error }) => {
+        if (!error && scans && scans.length > 0) {
+          setHistoryScans(scans);
+        } else {
+          // If user has local scans but none in cloud yet, sync them up!
+          const local = storageService.getScans();
+          if (local.length > 0) {
+            supabaseService.syncLocalScans(user.id, local).then(() => {
+              supabaseService.getUserScans(user.id).then(({ scans: synced }) => {
+                if (synced && synced.length > 0) setHistoryScans(synced);
+              });
+            });
+          }
+        }
+      });
+    } else {
+      const saved = storageService.getScans();
+      setHistoryScans(saved);
+    }
+  }, [user]);
+
+  // Deep link URL param parsing on mount (e.g. ?q=oreo)
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const queryParam = params.get('q');
@@ -77,7 +112,7 @@ export default function App() {
     } else if (activeView === 'history') {
       updatePageSEO({
         title: 'Scan History & Saved Food Labels',
-        description: 'Review your previously analyzed food products, nutrition ratings, and saved healthy labels on LabelLens.'
+        description: 'Review your previously analyzed food products, nutrition ratings, and saved healthy labels on Food Decode.'
       });
     } else if (activeView === 'scan') {
       updatePageSEO({
@@ -96,18 +131,29 @@ export default function App() {
     try {
       const result = await labelAnalysisService.analyzeLabel(base64Image, mimeType);
       
-      // Save result into local history
+      // 1. Requirement 9: Display result immediately
+      setCurrentProduct(result);
+      setActiveView('results');
+
+      // 2. Save result into local history
       storageService.saveScan(result);
       const updatedHistory = storageService.getScans();
       setHistoryScans(updatedHistory);
 
-      setCurrentProduct(result);
-      setActiveView('results');
+      // 3. Requirement 9: Save result to Supabase and associate with logged-in user
+      if (user) {
+        supabaseService.saveScan(user.id, result).then(({ scan, error }) => {
+          if (!error && scan) {
+            setCurrentProduct(scan);
+            setHistoryScans(prev => [scan, ...prev.filter(s => s.id !== result.id && s.id !== scan.id)]);
+          }
+        });
+      }
     } catch (err: any) {
-      console.warn('Label analysis result:', err?.message || err);
+      console.info('Label analysis result:', err?.message || err);
       if (err?.isNonEdible || err?.message?.toLowerCase().includes('non-edible')) {
         setNonEdibleNotice({
-          reason: err.nonEdibleReason || err.message || 'The scanned image appears to be a non-edible object rather than an edible food or drink package. LabelLens is strictly engineered to scan and analyze edible foods, groceries, snacks, and beverages.',
+          reason: err.nonEdibleReason || err.message || 'The scanned image appears to be a non-edible object rather than an edible food or drink package. Food Decode is strictly engineered to scan and analyze edible foods, groceries, snacks, and beverages. Always prefer scan over search term for authentic packaged goods.',
           image: base64Image
         });
         setActiveView('scan');
@@ -127,24 +173,50 @@ export default function App() {
     setCurrentProduct(demo);
     setActiveView('results');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
-  const handleToggleSave = () => {
-    if (!currentProduct) return;
-    storageService.toggleSave(currentProduct.id);
-    const updated = storageService.getScans();
-    setHistoryScans(updated);
-    const found = updated.find(s => s.id === currentProduct.id);
-    if (found) {
-      setCurrentProduct(found);
-    } else {
-      setCurrentProduct({ ...currentProduct, isSaved: !currentProduct.isSaved });
+    // Also persist demo exploration to user's Supabase account if logged in
+    if (user) {
+      supabaseService.saveScan(user.id, demo).then(({ scan }) => {
+        if (scan) {
+          setHistoryScans(prev => [scan, ...prev.filter(s => s.id !== demo.id && s.id !== scan.id)]);
+        }
+      });
     }
   };
 
-  const handleDeleteScan = (id: string) => {
+  const handleToggleSave = async (targetId?: string) => {
+    const idToToggle = targetId || currentProduct?.id;
+    if (!idToToggle) return;
+
+    // 1. Toggle in local storage
+    storageService.toggleSave(idToToggle);
+    let updated = storageService.getScans();
+
+    // 2. Toggle in Supabase if user is authenticated
+    if (user) {
+      const { isFavorite } = await supabaseService.toggleFavorite(user.id, idToToggle);
+      updated = updated.map(item => item.id === idToToggle ? { ...item, isSaved: isFavorite } : item);
+    }
+
+    setHistoryScans(updated);
+
+    if (currentProduct && currentProduct.id === idToToggle) {
+      const found = updated.find(s => s.id === idToToggle);
+      if (found) {
+        setCurrentProduct(found);
+      } else {
+        setCurrentProduct({ ...currentProduct, isSaved: !currentProduct.isSaved });
+      }
+    }
+  };
+
+  const handleDeleteScan = async (id: string) => {
     storageService.deleteScan(id);
-    setHistoryScans(storageService.getScans());
+    if (user) {
+      await supabaseService.deleteScan(user.id, id);
+    }
+    const updated = storageService.getScans();
+    setHistoryScans(updated);
     if (currentProduct?.id === id) {
       setCurrentProduct(null);
       setActiveView('history');
@@ -172,12 +244,25 @@ export default function App() {
           setActiveView('history');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        onFavoritesClick={() => {
+          setActiveView('favorites');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         onCompareClick={() => setShowCompareModal(true)}
         onHomeClick={() => {
           setActiveView('home');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        onLoginClick={() => {
+          setActiveView('login');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onSignUpClick={() => {
+          setActiveView('signup');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         historyCount={historyScans.length}
+        favoritesCount={historyScans.filter(s => s.isSaved).length}
         currentProduct={currentProduct}
       />
 
@@ -329,20 +414,45 @@ export default function App() {
               setShowCompareModal(true);
             }}
           />
-        ) : activeView === 'history' ? (
+        ) : activeView === 'history' || activeView === 'favorites' ? (
           /* Scan History & Favorites Dashboard */
           <HistoryDashboard
             scans={historyScans}
+            initialTab={activeView === 'favorites' ? 'saved' : 'all'}
+            isLoggedIn={Boolean(user)}
+            onOpenAuth={() => openAuthModal('login')}
             onSelectScan={(scan) => {
               setCurrentProduct(scan);
               setActiveView('results');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onToggleFavorite={handleToggleSave}
             onDeleteScan={handleDeleteScan}
             onClearHistory={handleClearHistory}
             onCompareWith={(scan) => {
               setCurrentProduct(scan);
               setShowCompareModal(true);
+            }}
+          />
+        ) : activeView === 'login' || activeView === 'signup' || activeView === 'forgot-password' || activeView === 'reset-password' ? (
+          /* Dedicated Authentication Pages: Login, Sign up, Forgot Password, Reset Password */
+          <AuthPage
+            initialTab={
+              activeView === 'signup'
+                ? 'signup'
+                : activeView === 'forgot-password'
+                ? 'forgot'
+                : activeView === 'reset-password'
+                ? 'reset'
+                : 'login'
+            }
+            onNavigateHome={() => {
+              setActiveView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateScan={() => {
+              setActiveView('scan');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           />
         ) : (
@@ -386,25 +496,34 @@ export default function App() {
         />
       )}
 
-      {/* Global Footer with Required Non-Medical Disclaimer */}
+      {/* Global Footer with Required Non-Medical Disclaimer & Policy Modals */}
       <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-10 px-4 sm:px-6 lg:px-8 mt-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-stone-800 text-center md:text-left">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">
-                LL
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 flex items-center justify-center text-white font-black text-xs shadow-sm">
+                FD
               </div>
-              <span className="text-lg font-bold text-white font-display">LabelLens</span>
-              <span className="text-xs text-stone-500 ml-1">Understand what’s really in your food.</span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg font-black tracking-tight font-display text-white">
+                    <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-200 bg-clip-text text-transparent">Food</span> Decode
+                  </span>
+                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    AI OCR
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-400/90 font-medium -mt-0.5">Prefer scan over search term for 100% packaging fidelity</p>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-5 text-xs">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 text-xs">
               <button
                 onClick={() => {
                   setActiveView('home');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="hover:text-stone-200 transition-colors"
+                className="hover:text-emerald-300 transition-colors font-medium"
               >
                 Home
               </button>
@@ -413,45 +532,91 @@ export default function App() {
                   setActiveView('scan');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="hover:text-stone-200 transition-colors"
+                className="hover:text-emerald-300 transition-colors font-medium flex items-center gap-1"
               >
-                Scan Label
+                <Scan className="w-3 h-3 text-emerald-400" />
+                Scan Label (Preferred)
               </button>
               <button
                 onClick={() => {
                   setActiveView('history');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="hover:text-stone-200 transition-colors"
+                className="hover:text-emerald-300 transition-colors font-medium"
               >
                 History ({historyScans.length})
               </button>
               <button
                 onClick={() => setShowCompareModal(true)}
-                className="hover:text-stone-200 transition-colors"
+                className="hover:text-emerald-300 transition-colors font-medium"
               >
                 Compare Products
+              </button>
+              <span className="text-stone-700 hidden sm:inline">|</span>
+              <button
+                onClick={() => setActiveFooterModal('about')}
+                className="text-stone-300 hover:text-white font-semibold underline underline-offset-4 decoration-stone-600 hover:decoration-emerald-400 transition-colors"
+              >
+                About
+              </button>
+              <button
+                onClick={() => setActiveFooterModal('privacy')}
+                className="text-stone-300 hover:text-white font-semibold underline underline-offset-4 decoration-stone-600 hover:decoration-emerald-400 transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <button
+                onClick={() => setActiveFooterModal('terms')}
+                className="text-stone-300 hover:text-white font-semibold underline underline-offset-4 decoration-stone-600 hover:decoration-emerald-400 transition-colors"
+              >
+                Terms of Service
               </button>
             </div>
           </div>
 
-          {/* Mandatory Non-Medical Disclaimer (Section 21) */}
+          {/* Mandatory Non-Medical Disclaimer */}
           <div className="text-xs text-stone-500 leading-relaxed max-w-4xl space-y-1">
             <p className="font-semibold text-stone-400 flex items-center gap-1.5">
               <ShieldAlert className="w-4 h-4 text-emerald-500 shrink-0" />
               General Educational & Consumer Transparency Notice:
             </p>
             <p>
-              LabelLens extracts information visible on packaged food labels using computer vision and standard nutritional databases. It is intended solely for consumer education and convenience and does not provide medical, dietary, or diagnostic advice. Allergen screening is derived strictly from visible packaging text; always verify packaging directly for severe allergies or manufacturing updates.
+              Food Decode extracts information visible on packaged food labels using computer vision and standard nutritional databases. We advise consumers to prefer scan over search term to ensure accurate reading of specific batch lot formulations and regional allergen warning boxes. Food Decode is intended solely for consumer education and does not provide medical, dietary, or diagnostic advice.
             </p>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-stone-600">
-            <span>LabelLens AI • Optical Character Recognition & Nutritional Standardization</span>
-            <span>Ref: FDA 21 CFR 101.9 & EU Regulation 1169/2011</span>
+            <span>Food Decode AI • Optical Character Recognition & Nutritional Standardization</span>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setActiveFooterModal('about')} className="hover:text-stone-400">About</button>
+              <span>•</span>
+              <button onClick={() => setActiveFooterModal('privacy')} className="hover:text-stone-400">Privacy Policy</button>
+              <span>•</span>
+              <button onClick={() => setActiveFooterModal('terms')} className="hover:text-stone-400">Terms of Service</button>
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* Footer Modals Dialog */}
+      <FooterModals
+        activeModal={activeFooterModal}
+        onClose={() => setActiveFooterModal(null)}
+        onSwitchModal={(type) => setActiveFooterModal(type)}
+        onScanClick={() => {
+          setActiveView('scan');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+
+      {/* Supabase Authentication Modal */}
+      <AuthModal />
+
+      {/* Supabase User Profile Modal */}
+      <ProfileModal
+        totalScansCount={historyScans.length}
+        totalFavoritesCount={historyScans.filter(s => s.isSaved).length}
+      />
     </div>
   );
 }

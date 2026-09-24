@@ -175,7 +175,7 @@ export const labelAnalysisService = {
 
         if (response.status === 422 || errorData?.isNonEdible) {
           const nonEdibleErr: any = new Error(
-            errorData.error || errorData.nonEdibleReason || 'Non-edible item detected: LabelLens only scans and analyzes edible food and beverage packages, not non-food materials.'
+            errorData.error || errorData.nonEdibleReason || 'Non-edible item detected: Food Decode only scans and analyzes edible food and beverage packages, not non-food materials. Prefer scan over search term for authentic packaged goods.'
           );
           nonEdibleErr.isNonEdible = true;
           nonEdibleErr.nonEdibleReason = errorData.error || errorData.nonEdibleReason;
@@ -194,7 +194,7 @@ export const labelAnalysisService = {
       const result = await response.json();
       if (result?.isNonEdible) {
         const nonEdibleErr: any = new Error(
-          result.nonEdibleReason || 'Non-edible item detected: LabelLens only analyzes edible food and beverage products.'
+          result.nonEdibleReason || 'Non-edible item detected: Food Decode only analyzes edible food and beverage products.'
         );
         nonEdibleErr.isNonEdible = true;
         nonEdibleErr.nonEdibleReason = result.nonEdibleReason;

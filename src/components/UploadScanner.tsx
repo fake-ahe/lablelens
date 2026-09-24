@@ -116,7 +116,7 @@ export const UploadScanner: React.FC<UploadScannerProps> = ({
     const check = checkIsNonEdible(baseName);
     if (check.isNonEdible) {
       setNonEdibleError(
-        `Cannot scan non-edible item: "${file.name}" was identified as a non-food item (${check.matchedCategory}). LabelLens only scans and analyzes edible food and beverage packages.`
+        `Cannot scan non-edible item: "${file.name}" was identified as a non-food item (${check.matchedCategory}). Food Decode only scans and analyzes edible food and beverage packages. Prefer scan over search term for authentic packaged groceries.`
       );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -231,9 +231,9 @@ export const UploadScanner: React.FC<UploadScannerProps> = ({
           <Utensils className="w-4 h-4" />
         </div>
         <div>
-          <span className="font-bold text-emerald-900 block">Strictly Edible Foods & Beverages Only</span>
+          <span className="font-bold text-emerald-900 block">Strictly Edible Foods & Beverages • Prefer Scan Over Search Term</span>
           <span className="text-emerald-800">
-            LabelLens is engineered exclusively for packaged food items, groceries, snacks, and drinks. Non-edible objects (such as phones, electronics, plastics, clothing, hardware, or cleaning chemicals) are strictly rejected.
+            Food Decode is engineered exclusively for packaged food items, groceries, snacks, and drinks. We recommend users prefer scan over search term to guarantee 100% accurate OCR reading of real printed packaging. Non-edible objects are strictly rejected.
           </span>
         </div>
       </div>

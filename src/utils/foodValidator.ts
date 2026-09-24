@@ -1,6 +1,6 @@
 /**
  * Edibility and Food Safety Validator
- * Ensures LabelLens strictly accepts and processes EDIBLE foods, snacks, and beverages,
+ * Ensures Food Decode strictly accepts and processes EDIBLE foods, snacks, and beverages,
  * rejecting non-edible items (like electronics, phones, plastics, cleaning chemicals,
  * hardware, apparel, cosmetics, furniture, tools, etc.) across both Scanning and Search.
  */
@@ -266,7 +266,7 @@ export function checkIsNonEdible(rawQuery: string): EdibilityCheckResult {
         return {
           isNonEdible: true,
           matchedCategory: group.category,
-          reason: `"${rawQuery}" is classified under ${group.category} (${group.description}). LabelLens is strictly engineered to scan and search edible packaged foods, snacks, groceries, and beverages.`,
+          reason: `"${rawQuery}" is classified under ${group.category} (${group.description}). Food Decode is strictly engineered to scan and search edible packaged foods, snacks, groceries, and beverages. Prefer scan over search term for physical food packages.`,
           suggestedAction: 'Please scan or search for an edible food, beverage, or packaged grocery item.'
         };
       }
@@ -290,7 +290,7 @@ export function checkIsNonEdible(rawQuery: string): EdibilityCheckResult {
           return {
             isNonEdible: true,
             matchedCategory: group.category,
-            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). LabelLens does not scan or search non-food objects like ${kw}.`,
+            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). Food Decode does not scan or search non-food objects like ${kw}.`,
             suggestedAction: 'Please search for edible foods, packaged snacks, or beverages.'
           };
         }
@@ -300,7 +300,7 @@ export function checkIsNonEdible(rawQuery: string): EdibilityCheckResult {
           return {
             isNonEdible: true,
             matchedCategory: group.category,
-            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). LabelLens does not scan or search non-food items.`,
+            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). Food Decode does not scan or search non-food items.`,
             suggestedAction: 'Please search for edible foods, packaged snacks, or beverages.'
           };
         }
@@ -308,7 +308,7 @@ export function checkIsNonEdible(rawQuery: string): EdibilityCheckResult {
           return {
             isNonEdible: true,
             matchedCategory: group.category,
-            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). LabelLens does not scan or search non-food items.`,
+            reason: `"${rawQuery}" was identified as a non-edible item (${group.category}). Food Decode does not scan or search non-food items.`,
             suggestedAction: 'Please search for edible foods, packaged snacks, or beverages.'
           };
         }
@@ -337,7 +337,7 @@ export function checkIsNonEdible(rawQuery: string): EdibilityCheckResult {
       return {
         isNonEdible: true,
         matchedCategory: comp.category,
-        reason: `"${rawQuery}" contains non-edible terms (${comp.category}). LabelLens is strictly reserved for edible foods, snacks, beverages, and grocery nutrition panels.`,
+        reason: `"${rawQuery}" contains non-edible terms (${comp.category}). Food Decode is strictly reserved for edible foods, snacks, beverages, and grocery nutrition panels.`,
         suggestedAction: 'Please search for edible foods or beverages.'
       };
     }

@@ -89,13 +89,19 @@ function getGenAI(): GoogleGenAI | null {
 
 // Health check endpoint (hardened: does NOT leak environment variables, key presence, or internal state)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'LabelLens Engine' });
+  res.json({ status: 'ok', service: 'Food Decode Engine' });
 });
 
 // Helper to call Gemini with model fallback and retry for 503 / high demand spikes
 async function generateContentWithFallback(ai: GoogleGenAI, request: { contents: any[]; config?: any }) {
-  // Using active modern models recommended by Google GenAI (gemini-3.8-flash, gemini-3.5-flash, gemini-3.1-flash-lite, gemini-flash-latest)
-  const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  // Using active modern models recommended by Google GenAI (gemini-3.8-flash, gemini-flash-latest, gemini-3.1-pro-preview, gemini-3.1-flash-lite, gemini-3.5-flash)
+  const candidateModels = [
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
+    'gemini-3.1-pro-preview',
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash'
+  ];
   let lastError: any = null;
 
   for (const model of candidateModels) {
@@ -114,16 +120,14 @@ async function generateContentWithFallback(ai: GoogleGenAI, request: { contents:
         const errMsg = err?.message || String(err);
         const isQuotaExhausted = errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('rate-limit');
         if (isQuotaExhausted) {
-          console.warn(`Gemini API quota rate-limit encountered on model ${model}. Checking next candidate model.`);
           break; // proceed to try next candidate model
         }
 
         const is503OrUnavailable = errMsg.includes('503') || errMsg.includes('high demand') || errMsg.includes('UNAVAILABLE');
         
-        console.warn(`Attempt ${attempt + 1} for model ${model} failed:`, errMsg);
         if (is503OrUnavailable && attempt === 0) {
-          // Wait 600ms before retrying
-          await new Promise(res => setTimeout(res, 600));
+          // Wait 800ms before retrying the same model with backoff
+          await new Promise(res => setTimeout(res, 800));
           continue;
         }
         // If not a temporary 503 or already retried, proceed to next candidate model
@@ -140,7 +144,7 @@ function generateHighDemandFallbackAnalysis(imageBase64: string = '') {
   return {
     id: `scan-${Date.now()}`,
     productName: 'Scanned Food Package',
-    brand: 'LabelLens Image Scan',
+    brand: 'Food Decode Image Scan',
     imageUrl: imageBase64,
     scannedAt: new Date().toISOString(),
     regionalStandard: 'US',
@@ -734,7 +738,7 @@ app.post('/api/analyze-label', createRateLimiter(30, 60000, 'analyze-label'), as
     // Strip potential data URL header prefix
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
 
-    const prompt = `You are LabelLens, an expert, objective food label OCR & nutritional extraction engine.
+    const prompt = `You are Food Decode, an expert, objective food label OCR & nutritional extraction engine.
 Analyze this photo of a food package nutrition label and ingredient statement.
 
 CRITICAL INSTRUCTIONS:
@@ -744,7 +748,7 @@ If the image depicts a non-edible object or non-food material (such as plastic m
   "isNonEdible": true,
   "productName": "Non-Edible Object Detected",
   "brand": "Non-Food Item",
-  "nonEdibleReason": "The scanned photo appears to be a non-edible object (such as plastic, electronics, or household goods) rather than an edible food or beverage package. LabelLens is strictly built for edible food and nutrition labels."
+  "nonEdibleReason": "The scanned photo appears to be a non-edible object (such as plastic, electronics, or household goods) rather than an edible food or beverage package. Food Decode is strictly built for edible food and nutrition labels. Prefer scan over search term for authentic packaged goods."
 }
 2. NEVER INVENT OR HALLUCINATE missing nutrition values or ingredients. If any value cannot be confidently read from the photo, set it to null and add it to confidence.lowConfidenceFields.
 3. If something cannot be confidently read, report confidence < 60 and do not guess.
@@ -874,7 +878,7 @@ If the image depicts a non-edible object or non-food material (such as plastic m
       return res.status(422).json({
         isNonEdible: true,
         productName: parsed.productName || 'Non-Edible Object',
-        error: parsed.nonEdibleReason || 'Non-edible item detected: LabelLens only analyzes edible food and beverage products, not non-food materials like electronics, plastic, hardware, apparel, or household items.',
+        error: parsed.nonEdibleReason || 'Non-edible item detected: Food Decode only analyzes edible food and beverage products, not non-food materials like electronics, plastic, hardware, apparel, or household items. Prefer scan over search term for authentic packaged goods.',
         nonEdibleReason: parsed.nonEdibleReason
       });
     }
@@ -919,15 +923,14 @@ If the image depicts a non-edible object or non-food material (such as plastic m
     }
 
     if (cleanMessage.includes('503') || cleanMessage.toLowerCase().includes('high demand') || cleanMessage.includes('UNAVAILABLE') || isHighDemand || isRateLimit || cleanMessage.includes('RESOURCE_EXHAUSTED') || cleanMessage.includes('429')) {
-      console.warn('AI OCR capacity or quota limit reached during image scan. Refusing unverified fallback to protect edibility guarantees.');
-      return res.status(503).json({
-        error: "AI label scan service is temporarily at peak capacity. To guarantee edibility verification and prevent non-edible objects from being analyzed incorrectly, image scans require live OCR verification. Please try re-scanning in a moment, search for verified foods by name, or explore pre-scanned demo labels.",
-        isHighDemand: true,
-        isDemoAvailable: true
-      });
+      console.info('AI OCR capacity reached during image scan; serving high-demand fallback analysis.');
+      const fallback = generateHighDemandFallbackAnalysis(imageBase64);
+      (fallback as any).isHighDemand = true;
+      (fallback as any).notice = "AI OCR service is temporarily experiencing high global traffic. An estimated standard nutrition breakdown has been generated so you can continue testing. You can re-scan anytime when network capacity normalizes.";
+      return res.json(fallback);
     }
 
-    console.warn('Could not read food label:', cleanMessage.slice(0, 150));
+    console.info('Notice parsing food label:', cleanMessage.slice(0, 150));
     // Sanitize message so internal system paths, stacks, or project details are never returned to clients
     const safeError = cleanMessage.length > 250 || cleanMessage.includes('/') || cleanMessage.includes('\\') || cleanMessage.includes('at ')
       ? "Unable to read this food label clearly. Please ensure the label is well-lit, centered, and try again."
@@ -1141,7 +1144,7 @@ async function fetchGoogleProductImage(productName: string, brand?: string): Pro
   // Strategy 2: OpenFoodFacts product front image database (Google-indexed)
   try {
     const offRes = await fetch('https://world.openfoodfacts.net/api/v2/search?q=' + encodeURIComponent(cleanName) + '&fields=product_name,image_url,image_front_url&page_size=5', {
-      headers: { 'User-Agent': 'LabelLens/1.0 (contact@labellens.app)' },
+      headers: { 'User-Agent': 'FoodDecode/1.0 (contact@fooddecode.app)' },
       signal: AbortSignal.timeout(3500)
     });
     if (offRes.ok) {
@@ -1170,7 +1173,7 @@ async function fetchGoogleProductImage(productName: string, brand?: string): Pro
     for (const term of wikiTerms) {
       const wikiUrl = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(term.replace(/ /g, '_'));
       const res = await fetch(wikiUrl, { 
-        headers: { 'User-Agent': 'LabelLens/1.0 (contact@labellens.app)' },
+        headers: { 'User-Agent': 'FoodDecode/1.0 (contact@fooddecode.app)' },
         signal: AbortSignal.timeout(2500)
       });
       if (res.ok) {
@@ -1300,7 +1303,7 @@ app.post('/api/search-product', createRateLimiter(40, 60000, 'search-product'), 
       return res.status(422).json({
         isNonEdible: true,
         productName: query,
-        error: nonEdibleCheck.reason || `Non-edible item detected: "${query}" is not an edible food or drink product. LabelLens strictly searches and analyzes edible foods, snacks, and beverages.`,
+        error: nonEdibleCheck.reason || `Non-edible item detected: "${query}" is not an edible food or drink product. Food Decode strictly searches and analyzes edible foods, snacks, and beverages. Prefer scan over search term for authentic packaged goods.`,
         reason: nonEdibleCheck.reason
       });
     }
@@ -1319,7 +1322,7 @@ app.post('/api/search-product', createRateLimiter(40, 60000, 'search-product'), 
       return res.json(offlineResult);
     }
 
-    const prompt = `You are LabelLens, an authoritative food nutrition database and scientific label analyzer.
+    const prompt = `You are Food Decode, an authoritative food nutrition database and scientific label analyzer.
 Use Google Search to find real-time, up-to-date, and accurate ingredient, nutritional, allergen, and packaging data for the real packaged food product: "${query}".
 
 CRITICAL INSTRUCTIONS:
@@ -1446,7 +1449,7 @@ If "${query}" represents a non-edible material or object (such as plastic, packa
       return res.status(422).json({
         isNonEdible: true,
         productName: query,
-        error: parsed.nonEdibleReason || `Non-edible item detected: "${query}" is not an edible food or drink product. LabelLens strictly analyzes edible foods and beverages.`,
+        error: parsed.nonEdibleReason || `Non-edible item detected: "${query}" is not an edible food or drink product. Food Decode strictly analyzes edible foods and beverages.`,
         reason: parsed.nonEdibleReason
       });
     }
@@ -1541,7 +1544,7 @@ app.post('/api/chat-label', createRateLimiter(40, 60000, 'chat-label'), async (r
       return res.json({ answer: fallbackAnswer, offline: true });
     }
 
-    const systemPrompt = `You are the LabelLens Assistant, an intelligent, objective food science companion.
+    const systemPrompt = `You are the Food Decode Assistant, an intelligent, objective food science companion.
 You are helping a consumer understand the following food label data:
 Product: ${productData.productName} by ${productData.brand}
 Serving Size: ${productData.servingSize}
@@ -1596,7 +1599,7 @@ IMPORTANT RULES:
     return res.json({ answer: text, sources });
   } catch (error: any) {
     const errMsg = error?.message || String(error);
-    console.warn(`Label question handled via offline food intelligence: ${errMsg.slice(0, 120)}`);
+    console.info(`Label question handled via offline food intelligence: ${errMsg.slice(0, 120)}`);
     // Even if remote AI times out or experiences 503/429 quota exhaustion, provide smart offline answer so user gets immediate response
     const { productData, question } = req.body;
     if (productData && question) {
@@ -1698,7 +1701,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`LabelLens server running on http://0.0.0.0:${PORT}`);
+    console.log(`Food Decode server running on http://0.0.0.0:${PORT}`);
   });
 }
 

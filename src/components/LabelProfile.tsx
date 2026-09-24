@@ -357,7 +357,7 @@ export const LabelProfile: React.FC<LabelProfileProps> = ({ product }) => {
 
             <div className="space-y-3 text-xs text-stone-600 pt-3">
               <p className="leading-relaxed">
-                LabelLens scores are completely open, auditable, and derived mathematically from verified nutritional benchmarks:
+                Food Decode scores are completely open, auditable, and derived mathematically from verified nutritional benchmarks:
               </p>
 
               <div className="space-y-2 pt-1">

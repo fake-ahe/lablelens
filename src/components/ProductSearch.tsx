@@ -14,7 +14,8 @@ import {
   History,
   TrendingUp,
   Trash2,
-  CornerDownLeft
+  CornerDownLeft,
+  Scan
 } from 'lucide-react';
 import { SEARCHABLE_PRODUCTS } from '../data/searchableProducts';
 import { LabelAnalysisResult } from '../types';
@@ -126,7 +127,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
     if (nonEdibleCheck.isNonEdible) {
       setNonEdibleNotice({
         query: trimmed,
-        reason: nonEdibleCheck.reason || `"${trimmed}" is classified as a non-edible item. LabelLens is strictly engineered to search and analyze edible foods, snacks, and beverages.`
+        reason: nonEdibleCheck.reason || `"${trimmed}" is classified as a non-edible item. Food Decode is strictly engineered to search and analyze edible foods, snacks, and beverages.`
       });
       return;
     }
@@ -149,7 +150,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
     // Update SEO dynamically for this search term
     updatePageSEO({
       title: `Search: ${finalQuery} Nutrition & Ingredients`,
-      description: `Explore nutrition facts, harmful additives, allergen alerts, and health impact for ${finalQuery} on LabelLens.`,
+      description: `Explore nutrition facts, harmful additives, allergen alerts, and health impact for ${finalQuery} on Food Decode. Prefer scan over search term for full packaging analysis.`,
       searchQuery: finalQuery,
       keywords: [finalQuery, `${finalQuery} ingredients`, `${finalQuery} nutrition facts`, `${finalQuery} calories`, `${finalQuery} additives`]
     });
@@ -187,7 +188,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
       if (response.status === 422 || responseData?.isNonEdible) {
         setNonEdibleNotice({
           query: finalQuery,
-          reason: responseData.error || responseData.reason || `"${finalQuery}" is a non-edible item (like electronics, plastic, hardware, or household product). LabelLens only searches edible food products.`
+          reason: responseData.error || responseData.reason || `"${finalQuery}" is a non-edible item (like electronics, plastic, hardware, or household product). Food Decode only searches edible food products.`
         });
         return;
       }
@@ -200,7 +201,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
         if (nonEdible.isNonEdible) {
           setNonEdibleNotice({
             query: finalQuery,
-            reason: nonEdible.reason || `"${finalQuery}" is a non-edible item. LabelLens only searches edible food and beverage products.`
+            reason: nonEdible.reason || `"${finalQuery}" is a non-edible item. Food Decode only searches edible food and beverage products.`
           });
           return;
         }
@@ -236,7 +237,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
       setShowAutocomplete(false);
       setNonEdibleNotice({
         query: item.query || item.displayText,
-        reason: nonEdible.reason || `"${item.displayText}" is classified as a non-edible item. LabelLens only analyzes edible food and beverage products.`
+        reason: nonEdible.reason || `"${item.displayText}" is classified as a non-edible item. Food Decode only analyzes edible food and beverage products.`
       });
       return;
     }
@@ -331,6 +332,21 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
         </div>
       </div>
 
+      {/* Pro Advisory: Prefer Scan Over Search Term */}
+      <div className="p-3 sm:px-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50 border border-emerald-200/90 text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
+        <div className="flex items-center gap-2.5 text-xs">
+          <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+            <Scan className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <span className="font-bold text-emerald-900">Prefer Scan Over Search Term: </span>
+            <span className="text-emerald-800">
+              For complete certainty, camera scanning reads the physical batch label, exact ingredient order, and local allergen warnings on your package.
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Auto-correction confirmation toast/banner if applied */}
       {autoCorrectNotice && (
         <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
@@ -360,7 +376,7 @@ export const ProductSearch: React.FC<ProductSearchProps> = ({
             {nonEdibleNotice.reason}
           </p>
           <div className="pt-1 text-[11px] text-amber-700 font-medium">
-            💡 LabelLens is designed exclusively for packaged foods, groceries, and drinks. Try searching for items like <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Oreo Cookies'); handleCustomAISearch('Oreo Cookies'); }}>Oreo</span>, <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Doritos Nacho Cheese'); handleCustomAISearch('Doritos Nacho Cheese'); }}>Doritos</span>, or <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Greek Yogurt'); handleCustomAISearch('Greek Yogurt'); }}>Greek Yogurt</span>.
+            💡 Food Decode is designed exclusively for packaged foods, groceries, and drinks. Prefer scan over search term when you have the item on hand. Try searching for items like <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Oreo Cookies'); handleCustomAISearch('Oreo Cookies'); }}>Oreo</span>, <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Doritos Nacho Cheese'); handleCustomAISearch('Doritos Nacho Cheese'); }}>Doritos</span>, or <span className="font-semibold underline cursor-pointer" onClick={() => { setSearchQuery('Greek Yogurt'); handleCustomAISearch('Greek Yogurt'); }}>Greek Yogurt</span>.
           </div>
         </div>
       )}

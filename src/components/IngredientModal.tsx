@@ -83,7 +83,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
           {/* Neutral Tone Guarantee */}
           <p className="text-[11px] text-stone-400 italic">
-            LabelLens explanations are derived from objective food-science literature and regulatory classifications (FDA, EFSA, Codex Alimentarius), completely free of fear-based marketing.
+            Food Decode explanations are derived from objective food-science literature and regulatory classifications (FDA, EFSA, Codex Alimentarius), completely free of fear-based marketing.
           </p>
         </div>
 

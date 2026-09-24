@@ -27,12 +27,12 @@ export interface AutocompleteResult {
 // In-memory cache for Google Suggestion API responses
 const googleSuggestCache = new Map<string, string[]>();
 
-const RECENT_SEARCHES_KEY = 'labellens_recent_searches_v1';
+const RECENT_SEARCHES_KEY = 'fooddecode_recent_searches_v1';
 
 export function getRecentSearches(): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
+    const raw = localStorage.getItem(RECENT_SEARCHES_KEY) || localStorage.getItem('labellens_recent_searches_v1');
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed.slice(0, 6) : [];

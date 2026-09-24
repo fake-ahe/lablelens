@@ -159,3 +159,220 @@ export interface ProductComparison {
   productB: LabelAnalysisResult;
   keyDifferences: string[];
 }
+
+// ==============================================================================
+// Phase 1: Supabase Database Schema Types
+// ==============================================================================
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Scan {
+  id: string;
+  user_id: string;
+  product_name: string;
+  brand: string | null;
+  barcode: string | null;
+  image_url: string | null;
+  analysis_json: LabelAnalysisResult;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  scan_id: string;
+  created_at: string;
+  scan?: Scan;
+}
+
+export interface UserPreferences {
+  id: string;
+  user_id: string;
+  dietary_preferences: string[];
+  allergens: string[];
+  region: string;
+  language: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Usage {
+  id: string;
+  user_id: string;
+  date: string;
+  scan_count: number;
+  chat_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Product {
+  id: string;
+  barcode: string | null;
+  product_name: string;
+  brand: string | null;
+  image_url: string | null;
+  ingredients: string | null;
+  nutrition_json: NutritionData | Record<string, any> | null;
+  source: string | null;
+  country: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: Profile;
+        Insert: {
+          id?: string;
+          user_id: string;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      scans: {
+        Row: {
+          id: string;
+          user_id: string;
+          product_name: string;
+          brand: string | null;
+          barcode: string | null;
+          image_url: string | null;
+          analysis_json: any;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          product_name: string;
+          brand?: string | null;
+          barcode?: string | null;
+          image_url?: string | null;
+          analysis_json: any;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          product_name?: string;
+          brand?: string | null;
+          barcode?: string | null;
+          image_url?: string | null;
+          analysis_json?: any;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      favorites: {
+        Row: Favorite;
+        Insert: {
+          id?: string;
+          user_id: string;
+          scan_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          scan_id?: string;
+          created_at?: string;
+        };
+      };
+      user_preferences: {
+        Row: UserPreferences;
+        Insert: {
+          id?: string;
+          user_id: string;
+          dietary_preferences?: any;
+          allergens?: any;
+          region?: string;
+          language?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          dietary_preferences?: any;
+          allergens?: any;
+          region?: string;
+          language?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      usage: {
+        Row: Usage;
+        Insert: {
+          id?: string;
+          user_id: string;
+          date?: string;
+          scan_count?: number;
+          chat_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          scan_count?: number;
+          chat_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      products: {
+        Row: Product;
+        Insert: {
+          id?: string;
+          barcode?: string | null;
+          product_name: string;
+          brand?: string | null;
+          image_url?: string | null;
+          ingredients?: string | null;
+          nutrition_json?: any;
+          source?: string | null;
+          country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          barcode?: string | null;
+          product_name?: string;
+          brand?: string | null;
+          image_url?: string | null;
+          ingredients?: string | null;
+          nutrition_json?: any;
+          source?: string | null;
+          country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+    };
+  };
+}
