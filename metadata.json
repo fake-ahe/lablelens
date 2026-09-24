@@ -1,0 +1,6 @@
+{
+  "name": "LabelLens",
+  "description": "Understand what's really in your food. Scan food labels to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LabelLens – Food Nutrition, Ingredient & Label Scanner</title>
+    <meta name="description" content="Understand what's really in your food. Scan food labels to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights." />
+    <meta name="keywords" content="food label scanner, packaged food search, nutrition facts checker, food additive safety, harmful ingredients detector, allergen warning scanner, healthy food alternatives, ultra-processed food identifier" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="/" />
+
+    <!-- OpenGraph Social Metadata -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LabelLens" />
+    <meta property="og:title" content="LabelLens – Food Nutrition, Ingredient & Label Scanner" />
+    <meta property="og:description" content="Understand what's really in your food. Scan food labels to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights." />
+    <meta property="og:url" content="/" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LabelLens – Food Nutrition, Ingredient & Label Scanner" />
+    <meta name="twitter:description" content="Understand what's really in your food. Scan food labels to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights." />
+
+    <!-- Schema.org SearchAction & WebApplication Structured Data -->
+    <script id="labellens-schema-jsonld" type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "LabelLens",
+          "url": "https://labellens.app",
+          "description": "Understand what's really in your food. Scan food labels to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://labellens.app/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "name": "LabelLens",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "All",
+          "description": "Scan food labels and search packaged foods to get simple, standardized nutrition breakdowns, ingredient analyses, allergen alerts, and health impact insights.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-stone-50 text-stone-900 antialiased font-sans selection:bg-emerald-100 selection:text-emerald-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
