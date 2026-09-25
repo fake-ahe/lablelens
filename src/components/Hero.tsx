@@ -1,5 +1,5 @@
-import React from 'react';
-import { Scan, Upload, Sparkles, ShieldCheck, HeartPulse, Layers, AlertCircle, Scale, Brain } from 'lucide-react';
+import React, { useState } from 'react';
+import { Scan, Upload, Sparkles, ShieldCheck, HeartPulse, Layers, AlertCircle, Scale, Brain, Loader2, ArrowRight } from 'lucide-react';
 import { DEMO_PRODUCTS } from '../data/demoProducts';
 import { LabelAnalysisResult } from '../types';
 import { ProductSearch } from './ProductSearch';
@@ -16,6 +16,16 @@ export const Hero: React.FC<HeroProps> = ({
   onSelectDemo
 }) => {
   const primaryDemo = DEMO_PRODUCTS[0]; // Crunchy Cocoa Oat Bites
+  const [isExploring, setIsExploring] = useState(false);
+
+  const handleExplore = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setIsExploring(true);
+    onSelectDemo({ ...primaryDemo });
+  };
 
   const features = [
     {
@@ -151,7 +161,10 @@ export const Hero: React.FC<HeroProps> = ({
         </div>
 
         {/* Featured Sample Card Preview */}
-        <div className="mt-12 bg-white rounded-2xl border border-stone-200/80 shadow-md p-6 max-w-4xl mx-auto">
+        <div 
+          onClick={handleExplore}
+          className="mt-12 bg-white rounded-2xl border border-stone-200/80 shadow-md p-6 max-w-4xl mx-auto cursor-pointer hover:border-emerald-400/90 hover:shadow-lg transition-all group"
+        >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-stone-100">
             <div>
               <div className="flex items-center gap-2">
@@ -160,18 +173,31 @@ export const Hero: React.FC<HeroProps> = ({
                 </span>
                 <span className="text-xs text-stone-400">US FDA Format • 98% Confidence</span>
               </div>
-              <h3 className="text-xl font-bold text-stone-900 mt-1 font-display">
+              <h3 className="text-xl font-bold text-stone-900 mt-1 font-display group-hover:text-emerald-700 transition-colors">
                 {primaryDemo.productName}
               </h3>
               <p className="text-sm text-stone-500">{primaryDemo.brand} • {primaryDemo.servingSize}</p>
             </div>
 
             <button
-              onClick={() => onSelectDemo(primaryDemo)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors shrink-0"
+              type="button"
+              id="hero-explore-demo-btn"
+              onClick={handleExplore}
+              disabled={isExploring}
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-emerald-900/20 hover:shadow-emerald-600/35 shrink-0 cursor-pointer ring-2 ring-emerald-400/40 hover:ring-emerald-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:opacity-80"
             >
-              <span>Explore This Scan</span>
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              {isExploring ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Loading Analysis...</span>
+                </>
+              ) : (
+                <>
+                  <span>Explore This Scan</span>
+                  <Sparkles className="w-4 h-4 text-emerald-200" />
+                  <ArrowRight className="w-3.5 h-3.5 text-emerald-200 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
             </button>
           </div>
 

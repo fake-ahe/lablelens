@@ -168,19 +168,33 @@ export default function App() {
   };
 
   const handleSelectDemo = (demo: LabelAnalysisResult) => {
-    storageService.saveScan(demo);
-    setHistoryScans(storageService.getScans());
-    setCurrentProduct(demo);
+    if (!demo) return;
+    const productCopy = { ...demo };
+    // Immediately transition view and state first
+    setCurrentProduct(productCopy);
     setActiveView('results');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      window.scrollTo(0, 0);
+    }
+
+    // Safely sync to storage in background
+    try {
+      storageService.saveScan(productCopy);
+      setHistoryScans(storageService.getScans());
+    } catch (e) {
+      console.warn('Storage sync skipped:', e);
+    }
 
     // Also persist demo exploration to user's Supabase account if logged in
     if (user) {
-      supabaseService.saveScan(user.id, demo).then(({ scan }) => {
+      supabaseService.saveScan(user.id, productCopy).then(({ scan }) => {
         if (scan) {
           setHistoryScans(prev => [scan, ...prev.filter(s => s.id !== demo.id && s.id !== scan.id)]);
         }
-      });
+      }).catch(() => {});
     }
   };
 

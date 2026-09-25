@@ -13,7 +13,8 @@ export const AuthModal: React.FC = () => {
     signInWithGoogle,
     resetPassword,
     updatePassword,
-    isConfigured
+    isConfigured,
+    isGoogleOAuthEnabled
   } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -31,6 +32,10 @@ export const AuthModal: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setErrorMsg(null);
+    if (isGoogleOAuthEnabled === false) {
+      setErrorMsg('Google Sign-In is not enabled on this Supabase project yet. Please sign in or register with your email and password below.');
+      return;
+    }
     setIsGoogleLoading(true);
     const { error } = await signInWithGoogle();
     setIsGoogleLoading(false);
@@ -74,9 +79,11 @@ export const AuthModal: React.FC = () => {
           closeAuthModal();
         }
       } else if (authModalTab === 'signup') {
-        const { error } = await signUp(email, password, name);
+        const { error, requiresConfirmation } = await signUp(email, password, name);
         if (error) {
           setErrorMsg(error);
+        } else if (requiresConfirmation) {
+          setSuccessMsg('Account created! A confirmation email has been sent to your address. Please verify your email to log in.');
         } else {
           setSuccessMsg('Account created successfully! Welcome to Food Decode.');
           setTimeout(() => {
@@ -88,7 +95,7 @@ export const AuthModal: React.FC = () => {
         if (error) {
           setErrorMsg(error);
         } else {
-          setSuccessMsg('Password reset instructions sent. Please check your email inbox.');
+          setSuccessMsg('Password reset email sent! Please check your inbox (and spam folder) for the reset link.');
         }
       } else if (authModalTab === 'reset') {
         const { error } = await updatePassword(password);
@@ -233,6 +240,7 @@ export const AuthModal: React.FC = () => {
                 onClick={handleGoogleSignIn}
                 disabled={isGoogleLoading || isLoading}
                 className="w-full py-2.5 px-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-xs font-semibold text-stone-700 flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:shadow-xs active:scale-98 disabled:opacity-60 cursor-pointer"
+                title={isGoogleOAuthEnabled === false ? "Google Sign-In is not enabled on this Supabase project. Use email & password below." : "Continue with Google"}
               >
                 {isGoogleLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-stone-500" />
@@ -247,6 +255,11 @@ export const AuthModal: React.FC = () => {
                 <span>
                   {authModalTab === 'login' ? 'Continue with Google' : 'Sign up with Google'}
                 </span>
+                {isGoogleOAuthEnabled === false && (
+                  <span className="text-[10px] text-amber-700 bg-amber-100 font-medium px-1.5 py-0.5 rounded-full border border-amber-200 ml-1">
+                    OAuth Setup Needed
+                  </span>
+                )}
               </button>
 
               <div className="relative flex py-1 items-center">

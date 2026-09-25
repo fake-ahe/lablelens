@@ -332,7 +332,7 @@ export function getBestAlternativesForProduct(product: LabelAnalysisResult): Alt
     const currentSodium = product.nutrition.sodium?.value ?? null;
     const currentProtein = product.nutrition.protein?.value ?? null;
     const currentFiber = product.nutrition.fiber?.value ?? null;
-    const currentAdditivesCount = product.additives.length;
+    const currentAdditivesCount = product.additives?.length || 0;
 
     const dynamicComparisons = [...alt.highlightComparison];
 
